@@ -458,18 +458,30 @@ class Miner:
         self, synapse: GetDataEntityBucket
     ) -> GetDataEntityBucket:
         """Runs after the GetDataEntityBucket synapse has been deserialized (i.e. after synapse.data is available)."""
+        # Log thông tin chi tiết về request
         bt.logging.info(
-            f"Got to a GetDataEntityBucket request from {synapse.dendrite.hotkey} for Bucket ID: {str(synapse.data_entity_bucket_id)}."
+            f"INCOMING REQUEST: GetDataEntityBucket từ validator {synapse.dendrite.hotkey} 
+    ({synapse.dendrite.ip}) "
+            f"cho Bucket ID: {str(synapse.data_entity_bucket_id)} "
+            f"với version: {synapse.version}"
         )
 
-        # List all the data entities that this miner has for the requested DataEntityBucket.
+        # Log thêm nội dung đầy đủ của request nếu cần
+        try:
+            bt.logging.debug(f"REQUEST DETAILS: {synapse.model_dump_json()}")
+        except:
+            bt.logging.debug(f"REQUEST DETAILS: Không thể log chi tiết request")
+
+        # Xử lý request như cũ
         synapse.data_entities = self.storage.list_data_entities_in_data_entity_bucket(
             synapse.data_entity_bucket_id
         )
         synapse.version = constants.PROTOCOL_VERSION
 
+        # Log thông tin về response
         bt.logging.success(
-            f"Returning Bucket ID: {str(synapse.data_entity_bucket_id)} with {len(synapse.data_entities)} entities to {synapse.dendrite.hotkey}."
+            f"RESPONSE SENT: Đã trả về Bucket ID: {str(synapse.data_entity_bucket_id)} "
+            f"với {len(synapse.data_entities)} entities cho validator {synapse.dendrite.hotkey}"
         )
 
         return synapse
